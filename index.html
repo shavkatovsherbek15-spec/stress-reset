@@ -1,0 +1,869 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Stress-reset">
+<style>
+[hidden]{display:none!important}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+img{max-width:100%}
+.sessions label b{overflow-wrap:anywhere}
+</style>
+<title>Kechki Stress-reset</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: Home = one column (today's session, rounds, week, rules). Player = one screen per exercise: animated figure, target count, cue card, and a big "done" button the user taps to move on. No timers. Dark-first, because it is used in the evening. */
+:root{
+  --bg:#0d121c;
+  --surface:#151c29;
+  --surface-2:#1e2738;
+  --line:#2a3448;
+  --fg:#e8ecf3;
+  --muted:#8f9cb4;
+  --sun:#f2c35b;
+  --work:#ff8c42;
+  --rest:#4cc3b8;
+  --calm:#9ba8ff;
+  --warn:#ff8a7a;
+  --on-accent:#14100a;
+  --scrim:rgb(5 8 14 / .62);
+  --display:"Big Shoulders Display","Arial Narrow","Roboto Condensed",Impact,sans-serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#f1f3f7; --surface:#ffffff; --surface-2:#e8ecf3; --line:#d3dae6;
+    --fg:#131a27; --muted:#56627a;
+    --sun:#a37500; --work:#cf5a14; --rest:#0f8379; --calm:#4a5ad4; --warn:#c2412f;
+    --on-accent:#ffffff; --scrim:rgb(20 26 39 / .38);
+    color-scheme:light;
+  }
+}
+:root[data-theme="light"]{
+  --bg:#f1f3f7; --surface:#ffffff; --surface-2:#e8ecf3; --line:#d3dae6;
+  --fg:#131a27; --muted:#56627a;
+  --sun:#a37500; --work:#cf5a14; --rest:#0f8379; --calm:#4a5ad4; --warn:#c2412f;
+  --on-accent:#ffffff; --scrim:rgb(20 26 39 / .38);
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#0d121c; --surface:#151c29; --surface-2:#1e2738; --line:#2a3448;
+  --fg:#e8ecf3; --muted:#8f9cb4;
+  --sun:#f2c35b; --work:#ff8c42; --rest:#4cc3b8; --calm:#9ba8ff; --warn:#ff8a7a;
+  --on-accent:#14100a; --scrim:rgb(5 8 14 / .62);
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--bg);color:var(--fg);
+  font-family:var(--body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;
+}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--work);outline-offset:3px}
+#app{height:100%}
+.vh{position:absolute;opacity:0;width:1px;height:1px;margin:0;pointer-events:none}
+
+/* ---------- Home ---------- */
+.home{max-width:560px;margin:0 auto;padding-block:24px 48px;display:grid;gap:16px}
+.hero{display:grid;gap:10px;padding-block:6px 4px}
+.eyebrow{margin:0;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+h1{margin:0;font-family:var(--display);font-weight:800;font-size:clamp(52px,15vw,76px);line-height:.86;text-transform:uppercase;text-wrap:balance}
+h1 span{color:var(--work)}
+.lede{margin:0;color:var(--muted);max-width:42ch}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;display:grid;gap:14px;min-width:0}
+.card h2{margin:0;font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.card-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.tag{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+.sessions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.sessions label{display:grid;align-content:start;gap:3px;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--bg);cursor:pointer;min-width:0}
+.sessions label b{font-family:var(--display);font-size:24px;font-weight:800;text-transform:uppercase;line-height:1}
+.sessions label span{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.sessions label i{font-style:normal;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--work)}
+input:checked + label{border-color:var(--fg);background:var(--surface-2)}
+input:focus-visible + label{outline:2px solid var(--work);outline-offset:2px}
+
+.timeline{display:flex;height:10px;gap:3px}
+.timeline span{display:block;height:100%;border-radius:999px;min-width:6px}
+.legend{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px}
+.legend li{display:flex;align-items:center;gap:7px}
+.legend i{width:9px;height:9px;border-radius:50%;flex:none}
+.legend em{font-style:normal;color:var(--muted);font-variant-numeric:tabular-nums}
+.late{margin:0;font-size:14px;color:var(--warn)}
+
+.start{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;border:0;border-radius:16px;padding:18px 20px;background:var(--work);color:var(--on-accent);font-family:var(--display);font-weight:800;font-size:30px;text-transform:uppercase;letter-spacing:.02em;line-height:1}
+.start small{font-family:var(--body);font-size:15px;font-weight:600;text-transform:none;letter-spacing:0;opacity:.85;font-variant-numeric:tabular-nums}
+.start:active{transform:scale(.99)}
+
+.settings .row{display:grid;gap:8px}
+.row-label{display:grid}
+.row-label > span{font-weight:600}
+.row-label small{color:var(--muted);font-size:13px;line-height:1.35}
+.seg{display:flex;gap:6px}
+.seg label{flex:1 1 0;min-width:0;display:grid;justify-items:center;padding:8px 6px;border:1px solid var(--line);border-radius:12px;background:var(--bg);cursor:pointer;text-align:center}
+.seg label b{font-family:var(--display);font-weight:800;font-size:23px;line-height:1.1;font-variant-numeric:tabular-nums}
+.seg label small{font-size:12px;color:var(--muted)}
+.row.off{opacity:.45}
+
+.days{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.days li{display:grid;justify-items:center;gap:5px;padding:8px 0;border-radius:12px;text-align:center;min-width:0}
+.days .d{font-weight:700;font-size:13px}
+.days .m{color:var(--muted);font-size:11px;line-height:1.1}
+.days .c{width:24px;height:24px;border-radius:50%;border:1.5px dashed var(--line);display:grid;place-items:center}
+.days .c svg{width:14px;height:14px}
+.days li.is-done .c{border:0;background:var(--rest);color:var(--on-accent)}
+.days li.is-today{background:var(--surface-2)}
+
+.fold summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.fold summary::-webkit-details-marker{display:none}
+.fold summary::after{content:"+";color:var(--muted);font-size:22px;line-height:1}
+.fold[open] summary::after{content:"\2212"}
+.fold:not([open]){gap:0}
+.fold h3{margin:0 0 6px;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+.fold ul{margin:0;padding-left:18px;display:grid;gap:6px}
+.fold .do h3{color:var(--rest)}
+.fold .dont h3{color:var(--warn)}
+
+/* ---------- Player ---------- */
+.player{--phase:var(--work);max-width:520px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;gap:10px;padding-block:10px 14px}
+.p-top{display:flex;align-items:center;gap:8px}
+.pill{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--on-accent);background:var(--phase);padding:6px 11px;border-radius:999px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.p-count{margin-left:auto;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.icon-btn{flex:none;width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;color:var(--fg)}
+.icon-btn svg{width:20px;height:20px}
+.p-bar{height:4px;background:var(--line);border-radius:999px;overflow:hidden}
+.p-bar span{display:block;height:100%;width:0;background:var(--phase);border-radius:999px;transition:width .3s}
+.p-section{font-size:13px;color:var(--muted);font-weight:600}
+
+.p-stage{display:grid;gap:4px}
+.stage-card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:20px;overflow:hidden}
+.fig{display:block;width:100%;height:min(34vh,290px)}
+.fig polyline,.fig path{fill:none;stroke:var(--phase);stroke-linecap:round;stroke-linejoin:round}
+.fig polyline{stroke-width:7}
+.fig .torso{stroke-width:9}
+.fig .head{fill:var(--phase)}
+.fig .eye{fill:var(--surface)}
+.fig .ground{stroke:var(--line);stroke-width:2;stroke-linecap:round}
+.fig .prop{fill:none;stroke:var(--muted);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;opacity:.6}
+.fig .mat{fill:var(--surface-2)}
+.fig .pacer{fill:var(--phase);opacity:.22}
+.fig[data-view="side"] .far{opacity:.42}
+.fig:not([data-view="top"]) .mat{display:none}
+.fig[data-view="top"] .ground{display:none}
+.fig:not([data-view="side"]) .eye{display:none}
+.meta{position:absolute;top:10px;left:12px;right:12px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-variant-numeric:tabular-nums;pointer-events:none}
+.count{display:flex;align-items:baseline;justify-content:center;gap:10px;padding-top:6px}
+.big{font-family:var(--display);font-weight:800;font-size:clamp(60px,18vw,88px);line-height:.95;font-variant-numeric:tabular-nums;color:var(--phase)}
+.of{font-size:20px;color:var(--fg);font-weight:700}
+
+.p-info{display:grid;gap:6px;min-width:0}
+.p-info h2{margin:0;font-family:var(--display);font-weight:800;font-size:clamp(32px,9vw,44px);line-height:.95;text-transform:uppercase;text-wrap:balance}
+.p-sub{margin:0;color:var(--phase);font-weight:700;font-size:15px}
+.p-cue{margin:0;font-size:16px;line-height:1.45;max-width:46ch;min-height:1.45em}
+.p-err{display:flex;gap:9px;align-items:flex-start;font-size:15px;line-height:1.4}
+.p-err svg{flex:none;width:20px;height:20px;padding:4px;border-radius:50%;background:var(--warn);color:var(--on-accent);margin-top:1px}
+.p-easy{margin:0;font-size:14px;color:var(--muted)}
+.p-easy b{color:var(--rest)}
+.p-next{font-size:14px;color:var(--muted);padding:10px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
+.p-next b{color:var(--fg)}
+.p-spacer{flex:1}
+.p-controls{display:flex;align-items:center;gap:12px;padding-top:4px}
+.ctl{flex:none;width:60px;height:60px;border-radius:50%;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;color:var(--fg)}
+.ctl svg{width:24px;height:24px}
+.ctl:disabled{opacity:.35;cursor:default}
+.go{flex:1;height:64px;border:0;border-radius:18px;background:var(--phase);color:var(--on-accent);font-family:var(--display);font-weight:800;font-size:28px;text-transform:uppercase;letter-spacing:.02em;display:flex;align-items:center;justify-content:center;gap:10px}
+.go svg{width:26px;height:26px}
+.ctl:active,.go:active{transform:scale(.97)}
+
+.sheet{position:fixed;inset:0;z-index:20;background:var(--scrim);display:flex;align-items:flex-end;justify-content:center;
+  padding:0 max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.sheet-card{width:100%;max-width:440px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:20px;display:grid;gap:14px}
+.sheet-card p{margin:0;font-weight:700;font-size:18px}
+.sheet-card small{color:var(--muted);font-size:14px}
+.sheet-actions{display:flex;gap:10px}
+.sheet-actions button{flex:1;padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--surface-2);font-weight:700}
+.sheet-actions #sheet-stop{background:var(--warn);border-color:var(--warn);color:var(--on-accent)}
+
+/* ---------- Done ---------- */
+.done{max-width:520px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;justify-content:center;gap:16px;padding-block:28px}
+.done-mark{width:84px;height:84px;border-radius:50%;background:var(--rest);color:var(--on-accent);display:grid;place-items:center}
+.done-mark svg{width:42px;height:42px}
+.done h2{margin:0;font-family:var(--display);font-weight:800;font-size:clamp(46px,13vw,64px);line-height:.9;text-transform:uppercase;text-wrap:balance}
+.done p{margin:0}
+.done .after{margin:0;padding-left:18px;display:grid;gap:6px;color:var(--muted)}
+
+@media (prefers-reduced-motion: reduce){
+  *{transition:none!important}
+  .start:active,.ctl:active,.go:active{transform:none}
+}
+</style>
+
+</head>
+<body>
+<div id="app">
+  <main class="home" id="home">
+    <header class="hero">
+      <p class="eyebrow" id="today-date"></p>
+      <h1>Kechki <span>Stress-reset</span></h1>
+      <p class="lede">Odamcha har bir mashqni ko‘rsatadi, ostida nechta qilish kerakligi yoziladi. Bajarib bo‘lgach «Bajardim»ni bosasiz.</p>
+    </header>
+
+    <section class="card" aria-labelledby="pick-h">
+      <div class="card-head"><h2 id="pick-h">Bugungi mashg‘ulot</h2><span class="tag" id="today-tag"></span></div>
+      <div class="sessions" role="radiogroup" aria-label="Mashg‘ulot turi">
+        <input class="vh" type="radio" name="session" id="s-A" value="A"><label for="s-A"><b>To‘liq</b><span data-min="A"></span><i data-today="A" hidden>bugun</i></label>
+        <input class="vh" type="radio" name="session" id="s-B" value="B"><label for="s-B"><b>Yengil</b><span data-min="B"></span><i data-today="B" hidden>bugun</i></label>
+        <input class="vh" type="radio" name="session" id="s-C" value="C"><label for="s-C"><b>Cho‘zilish</b><span data-min="C"></span><i data-today="C" hidden>bugun</i></label>
+      </div>
+      <div class="timeline" id="timeline" aria-hidden="true"></div>
+      <ul class="legend" id="legend"></ul>
+      <p class="late" id="late-hint" hidden>Soat kech. Uyqugacha 1–1,5 soatdan kam qolgan bo‘lsa, «Cho‘zilish»ni tanlang.</p>
+      <button class="start" id="start-btn" type="button"><span>Boshlash</span><small id="start-min"></small></button>
+    </section>
+
+    <section class="card settings" aria-labelledby="set-h">
+      <h2 id="set-h">Sozlamalar</h2>
+      <div class="row" id="rounds-row">
+        <div class="row-label"><span>Aylanalar soni</span><small>Faqat to‘liq mashg‘ulotdagi «Stressni chiqarish» qismi uchun</small></div>
+        <div class="seg" role="radiogroup" aria-label="Aylanalar soni">
+          <input class="vh" type="radio" name="rounds" id="r-2" value="2"><label for="r-2"><b>2</b><small>1–2 hafta</small></label>
+          <input class="vh" type="radio" name="rounds" id="r-3" value="3"><label for="r-3"><b>3</b><small>3–4 hafta</small></label>
+          <input class="vh" type="radio" name="rounds" id="r-4" value="4"><label for="r-4"><b>4</b><small>5+ hafta</small></label>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="week-h">
+      <div class="card-head"><h2 id="week-h">Bu hafta</h2><span class="tag" id="week-count"></span></div>
+      <ol class="days" id="days"></ol>
+    </section>
+
+    <details class="card fold">
+      <summary>To‘g‘ri bajarish qoidalari</summary>
+      <div class="do">
+        <h3>Qiling</h3>
+        <ul>
+          <li>Har doim qizishdan boshlang, sovuq tana bilan kuch ishlatmang.</li>
+          <li>Oyoqni yerga urmasdan, ohista bajaring. Barcha mashqlar ovozsiz.</li>
+          <li>Kuch sarflaganda nafas chiqaring. Nafasni ushlab turmang.</li>
+          <li>Tezlikdan ko‘ra texnika: noto‘g‘ri 20 tadan to‘g‘ri 10 ta yaxshi.</li>
+          <li>Odamcha tempni ko‘rsatadi. O‘z tezligingizda bajaring, tayyor bo‘lgach «Bajardim»ni bosing.</li>
+          <li>Har kuni bir xil vaqtda qiling, 2–3 haftada odatga aylanadi.</li>
+        </ul>
+      </div>
+      <div class="dont">
+        <h3>Qilmang</h3>
+        <ul>
+          <li>Birinchi haftada o‘zingizni haddan tashqari charchatmang. «Yana qila olardim» degan his bilan tugating.</li>
+          <li>Dam paytida telefondagi xabarlarga qaramang.</li>
+          <li>Uyqudan oldingi 1–1,5 soat ichida og‘ir mashg‘ulot qilmang.</li>
+          <li>To‘q qorin bilan boshlamang, ovqatdan keyin 1,5–2 soat kuting.</li>
+          <li>Bo‘g‘imda o‘tkir og‘riq bo‘lsa, to‘xtang. Mushak charchab yonishi normal, tizza yoki yelkadagi sanchiq normal emas.</li>
+        </ul>
+      </div>
+    </details>
+
+    <details class="card fold">
+      <summary>Kun davomida, kompyuter oldida</summary>
+      <ul>
+        <li>Har 45–60 daqiqada 1–2 daqiqa tanaffus qiling.</li>
+        <li>O‘rningizdan turing, yelkalarni orqaga aylantiring.</li>
+        <li>Iyakni orqaga torting, 10 marta.</li>
+        <li>Qo‘llarni yuqoriga cho‘zing.</li>
+      </ul>
+    </details>
+  </main>
+
+  <section class="player" id="player" hidden aria-label="Mashg‘ulot">
+    <div class="p-top">
+      <span class="pill" id="p-phase"></span>
+      <span class="p-count" id="p-count"></span>
+      <button class="icon-btn" id="p-close" type="button" aria-label="Mashg‘ulotni to‘xtatish">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="p-bar"><span id="p-bar"></span></div>
+    <div class="p-section" id="p-section"></div>
+
+    <div class="p-stage">
+      <div class="stage-card">
+        <svg class="fig" id="fig" viewBox="0 0 240 200" data-view="side" aria-hidden="true">
+          <rect class="mat" x="36" y="22" width="168" height="168" rx="16"/>
+          <line class="ground" x1="12" y1="184" x2="228" y2="184"/>
+          <path class="prop" id="f-prop" hidden/>
+          <circle class="pacer" id="f-pacer" cx="0" cy="0" r="0" hidden/>
+          <g class="far"><polyline id="f-armL"/><polyline id="f-legL"/></g>
+          <path class="torso" id="f-torso"/>
+          <circle class="head" id="f-head" r="10"/>
+          <circle class="eye" id="f-eye" r="1.9"/>
+          <g class="near"><polyline id="f-legR"/><polyline id="f-armR"/></g>
+        </svg>
+        <span class="meta" id="p-meta"></span>
+      </div>
+      <div class="count"><span class="big" id="p-big"></span><span class="of" id="p-of"></span></div>
+    </div>
+
+    <div class="p-info">
+      <h2 id="p-title"></h2>
+      <p class="p-sub" id="p-sub"></p>
+      <p class="p-cue" id="p-cue"></p>
+      <div class="p-err" id="p-err">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg>
+        <span></span>
+      </div>
+      <p class="p-easy" id="p-easy"><b>Osonroq:</b> <span></span></p>
+    </div>
+    <div class="p-next" id="p-next"></div>
+    <div class="p-spacer"></div>
+    <div class="p-controls">
+      <button class="ctl" id="p-prev" type="button" aria-label="Oldingi mashq">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <button class="go" id="p-go" type="button"><span id="p-go-label">Bajardim</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+    <div class="sheet" id="p-sheet" hidden>
+      <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="sheet-q">
+        <p id="sheet-q">Mashg‘ulotni to‘xtatasizmi?</p>
+        <small>Bu kun haftalik belgiga qo‘shilmaydi.</small>
+        <div class="sheet-actions">
+          <button type="button" id="sheet-stay">Davom etish</button>
+          <button type="button" id="sheet-stop">To‘xtatish</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="done" id="done" hidden aria-label="Mashg‘ulot tugadi">
+    <div class="done-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+    <p class="eyebrow">Bajarildi</p>
+    <h2>Stress chiqarildi</h2>
+    <p id="done-text"></p>
+    <ol class="days" id="days-done"></ol>
+    <ul class="after">
+      <li>Suv iching.</li>
+      <li>Telefonga darhol qaytmang, bir necha daqiqa shu tinchlikni ushlab turing.</li>
+    </ul>
+    <button class="start" id="done-home" type="button"><span>Bosh sahifa</span></button>
+  </section>
+</div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+
+  const DAYS = ['Yakshanba','Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba'];
+  const DSHORT = ['Ya','Du','Se','Ch','Pa','Ju','Sh'];
+  const MONTHS = ['yanvar','fevral','mart','aprel','may','iyun','iyul','avgust','sentabr','oktabr','noyabr','dekabr'];
+  const PLAN = {0:'C',1:'A',2:'B',3:'A',4:'B',5:'A',6:'A'};
+  const SNAME = {A:'To‘liq', B:'Yengil', C:'Cho‘zilish'};
+  const SSHORT = {A:'To‘liq', B:'Yengil', C:'Cho‘z.'};
+
+  /* ================= Figure: poses and animations ================= */
+  // Angles in degrees: 0 = straight down, 90 = forward (to the right), 180 = up, -90 = backward.
+  const LEN = {tor:50, neck:17, hr:10, ua:28, fa:26, th:38, sh:38, ft:10};
+  const GROUND = 184;
+  const D0 = {t:180,h:0,cv:0,shx:0,shy:0,aL:0,fL:0,aR:0,fR:0,lL:0,sL:0,lR:0,sR:0,ftL:90,ftR:90};
+  const KEYS = Object.keys(D0);
+  const ps = o => Object.assign({}, D0, o);
+  const PAIRS = [['aL','aR'],['fL','fR'],['lL','lR'],['sL','sR'],['ftL','ftR']];
+  const swapLR = p => { const q = Object.assign({}, p); PAIRS.forEach(([a, b]) => { q[a] = p[b]; q[b] = p[a]; }); return q; };
+  const swapAn = a => ({aL:'aR', aR:'aL'})[a] || a;
+  const mix = (a, b) => Object.assign({}, a, b);
+  const ease = x => x < .5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
+  const rad = a => a * Math.PI / 180;
+  const deg = r => r * 180 / Math.PI;
+  const dir = (a, l) => [Math.sin(rad(a)) * l, Math.cos(rad(a)) * l];
+
+  function solve(p, view) {
+    const side = view === 'side';
+    const add = (o, v) => [o[0] + v[0], o[1] + v[1]];
+    const nk = dir(p.t, LEN.tor);
+    const hd = add(nk, dir(p.t + p.h, LEN.neck));
+    const sL = [nk[0] + (side ? 0 : -13) + p.shx, nk[1] + (side ? 0 : 4) + p.shy];
+    const sR = [nk[0] + (side ? 0 : 13) + p.shx, nk[1] + (side ? 0 : 4) + p.shy];
+    const hL = side ? [0, 0] : [-7, 0], hR = side ? [0, 0] : [7, 0];
+    const chain = (o, a1, l1, a2, l2) => { const m = add(o, dir(a1, l1)); return [o, m, add(m, dir(a2, l2))]; };
+    const fl = side ? LEN.ft : 6;
+    const armL = chain(sL, p.aL, LEN.ua, p.fL, LEN.fa);
+    const armR = chain(sR, p.aR, LEN.ua, p.fR, LEN.fa);
+    const legL = chain(hL, p.lL, LEN.th, p.sL, LEN.sh); legL.push(add(legL[2], dir(p.ftL, fl)));
+    const legR = chain(hR, p.lR, LEN.th, p.sR, LEN.sh); legR.push(add(legR[2], dir(p.ftR, fl)));
+    const len = Math.hypot(nk[0], nk[1]) || 1;
+    const n = [-nk[1] / len, nk[0] / len];
+    const mid = [nk[0] / 2, nk[1] / 2];
+    return {pel:[0,0], nk, hd, armL, armR, legL, legR,
+      ctrl:[mid[0] + n[0] * p.cv * 2, mid[1] + n[1] * p.cv * 2],
+      cmid:[mid[0] + n[0] * p.cv, mid[1] + n[1] * p.cv],
+      face:p.t + p.h};
+  }
+
+  // Two-bone IK, used only while building poses so planted hands and feet land where they belong.
+  const LIMB = {aR:['aR','fR','armR',LEN.ua,LEN.fa], aL:['aL','fL','armL',LEN.ua,LEN.fa], lR:['lR','sR','legR',LEN.th,LEN.sh], lL:['lL','sL','legL',LEN.th,LEN.sh]};
+  const pt = (pose, chain, i) => solve(ps(pose), 'side')[chain][i];
+  function reach(pose, limb, target, bend) {
+    const L = LIMB[limb], root = pt(pose, L[2], 0);
+    const dx = target[0] - root[0], dy = target[1] - root[1];
+    const d = Math.max(Math.abs(L[3] - L[4]) + .01, Math.min(L[3] + L[4] - .01, Math.hypot(dx, dy)));
+    const a1 = deg(Math.atan2(dx, dy)) + bend * deg(Math.acos((L[3] * L[3] + d * d - L[4] * L[4]) / (2 * L[3] * d)));
+    const e = [root[0] + Math.sin(rad(a1)) * L[3], root[1] + Math.cos(rad(a1)) * L[3]];
+    const near = (a, ref) => a + 360 * Math.round(((ref || 0) - a) / 360);
+    const o = Object.assign({}, pose);
+    o[L[0]] = near(a1, pose[L[0]]);
+    o[L[1]] = near(deg(Math.atan2(target[0] - e[0], target[1] - e[1])), pose[L[1]]);
+    return o;
+  }
+  const offset = (pose, ca, ia, cb, ib) => { const a = pt(pose, ca, ia), b = pt(pose, cb, ib); return [b[0] - a[0], b[1] - a[1]]; };
+  const plant = (pose, limb, chain, i, off, bend) => { const a = pt(pose, chain, i); return reach(pose, limb, [a[0] + off[0], a[1] + off[1]], bend); };
+  const both = (pose, chain, i, off, bend) => plant(plant(pose, 'aR', chain, i, off, bend), 'aL', chain, i, off, bend);
+
+  // Warm-up
+  const AF = {t:108,lL:0,sL:-90,lR:0,sR:-90,ftL:-90,ftR:-90};
+  const KUP = {lR:88,sR:-2,aL:12,fL:30,aR:12,fR:30};
+
+  // 1.5-rep split squat: front foot R flat, rear foot L on its toes; the hips drop straight down.
+  const splitPose = (drop, t) => {
+    const p = {t, h:180 - t, aR:20, fR:135, aL:20, fL:135, lR:20, sR:15, ftR:90, lL:-20, sL:-30, ftL:80};
+    return reach(reach(p, 'lR', [29, 70 - drop], 1), 'lL', [-32, 68.5 - drop], 1);
+  };
+  const SPT = splitPose(0, 180), SPH = splitPose(16, 178), SPB = splitPose(31, 176);
+
+  // Push-up (top / bottom)
+  const PLK = {t:110,h:-8,lL:-70,sL:-70,lR:-70,sR:-70,ftL:0,ftR:0};
+  const PLKD = {t:98,h:-6,aR:-65,fR:50,aL:-65,fL:50,lL:-82,sL:-82,lR:-82,sR:-82,ftL:0,ftR:0};
+
+  // Wall sit
+  const WS = {t:180, lR:90, sR:0, lL:90, sL:0, ftR:90, ftL:90, aR:20, fR:135, aL:20, fL:135};
+
+  // Pike push-up: hands stay planted at a fixed distance from the toes.
+  const PKU0 = {t:40, h:-10, lL:-20, sL:-20, lR:-20, sR:-20, ftL:80, ftR:80, aR:50, fR:50, aL:50, fL:50};
+  const PKO = [offset(PKU0, 'legR', 3, 'armR', 2)[0], 0];
+  const PKU = both(PKU0, 'legR', 3, PKO, -1);
+  const PKD = both({t:58, h:-25, lL:-42, sL:-42, lR:-42, sR:-42, ftL:60, ftR:60}, 'legR', 3, PKO, -1);
+
+  // Bear plank shoulder taps
+  const BR0 = {t:97, h:-8, lL:0, sL:-90, lR:0, sR:-90, ftL:12, ftR:12};
+  const BRT = (() => { const s = pt(BR0, 'armR', 0), toe = pt(BR0, 'legR', 3); return [s[0] + 2, toe[1]]; })();
+  const BR = reach(reach(BR0, 'aR', BRT, -1), 'aL', BRT, -1);
+  const BRR = mix(BR, {aR:60, fR:-120});
+  const BRL = mix(BR, {aL:60, fL:-120});
+
+  // Single-leg glute bridge: far foot L planted, near leg R straight and raised.
+  const SLD = {t:-90, aR:90, fR:90, aL:90, fL:90, lL:125, sL:-35, lR:105, sR:105, ftR:105};
+  const SLU = {t:-60, h:-30, aR:90, fR:90, aL:90, fL:90, lL:84, sL:-35, lR:120, sR:120, ftR:120};
+
+  // Dead bug, plank
+  const DB = {t:-90,h:0,aR:180,fR:180,aL:180,fL:180,lR:180,sR:90,lL:180,sL:90,ftL:180,ftR:180};
+  const EP = {t:98,h:-6,aR:0,fR:90,aL:0,fL:90,lL:-82,sL:-82,lR:-82,sR:-82,ftL:0,ftR:0};
+
+  // Kneeling quad / hip-flexor stretch: rear knee R down, the near hand R holds the rear foot; far hand on the front knee.
+  const KN0 = {lL:100, sL:0, ftL:90, lR:-36, sR:176, ftR:-80};
+  const knPose = t => {
+    const p = mix(KN0, {t, h:180 - t});
+    const k = pt(p, 'legL', 1), a = pt(p, 'legR', 2);
+    return reach(reach(p, 'aL', [k[0] + 2, k[1] - 5], -1), 'aR', [a[0] - 1, a[1] + 3], 1);
+  };
+  const KNA = knPose(176), KNB = knPose(183);
+
+  // Chest stretch in a doorway, hamstrings
+  const CH = {t:172,h:5,lR:18,sR:8,lL:-12,sL:-12,aR:-90,fR:180,aL:-90,fL:180};
+  const HM = {t:140,h:-10,lR:90,sR:90,lL:90,sL:90,ftR:180,ftL:180,aR:78,fR:82,aL:78,fL:82};
+  const LIE = {t:-90,h:0,aR:90,fR:90,aL:90,fL:90,lR:125,sR:-35,lL:125,sL:-35};
+
+  const A = {
+    catcow:   {x0:98, fr:[[mix(AF,{cv:9,h:38}),1800],[mix(AF,{cv:-13,h:-50}),1800]]},
+    tspine:   {x0:98, fr:[[mix(AF,{h:-20,aR:-10,fR:160}),1200],[mix(AF,{h:25,aR:175,fR:20}),1400]]},
+    jog:      {x0:120, per:2, fr:[[{},600],[KUP,900],[KUP,600],[{},600],[swapLR(ps(KUP)),900],[swapLR(ps(KUP)),600]]},
+    split:    {ax:'aR', x0:150, fr:[[SPT,1500],[SPB,300],[SPB,700],[SPH,700],[SPB,250],[SPB,1300],[SPT,400]]},
+    pushup:   {ax:'aR', x0:50, fr:[[PLK,3000],[PLKD,1000],[PLKD,800],[PLK,700]]},
+    wallsit:  {ax:'feet', x0:150, prop:'wall', fr:[[WS,1600],[mix(WS,{shy:-1.5}),1600]]},
+    pike:     {ax:'aR', x0:66, fr:[[PKU,1500],[PKD,600],[PKD,1000],[PKU,400]]},
+    bear:     {ax:'aR', x0:72, per:2, fr:[[BR,450],[BRR,350],[BRR,300],[BR,450],[BRL,350],[BRL,300]]},
+    slbridge: {ax:'aL', x0:150, fr:[[SLD,1000],[SLU,1500],[SLU,1000]]},
+    deadbug:  {x0:138, per:2, fr:[[DB,1500],[mix(DB,{aL:265,fL:265,lR:95,sR:95}),1500],[DB,1500],[mix(DB,{aR:265,fR:265,lL:95,sL:95}),1500]]},
+    plank:    {x0:112, fr:[[EP,1200],[mix(EP,{t:99,shy:-.8}),1200]]},
+    kneel:    {ax:'aL', x0:150, fr:[[KNA,2000],[KNB,2000]]},
+    chest:    {ax:'feet', x0:132, prop:'door', fr:[[CH,1800],[mix(CH,{t:168,h:8}),1800]]},
+    hams:     {x0:78, fr:[[HM,1800],[mix(HM,{t:133,aR:76,aL:76}),1800]]},
+    breath:   {ax:'aR', x0:162, fr:[[LIE,5000],[LIE,5000]]}
+  };
+  Object.values(A).forEach(an => {
+    an.view = an.view || 'side';
+    an.ay = an.ay || 'lowest';
+    an.per = an.per || 1;
+    an.fr = an.fr.map(f => [ps(f[0]), f[1], f[2]]);
+    an.cyc = an.fr.reduce((s, f) => s + f[1], 0);
+  });
+
+  function sample(an, t, side2) {
+    const fr = an.fr;
+    let tt = ((t % an.cyc) + an.cyc) % an.cyc;
+    let i = 0;
+    while (i < fr.length - 1 && tt >= fr[i][1]) { tt -= fr[i][1]; i++; }
+    const a = fr[i], b = fr[(i + 1) % fr.length];
+    const u = ease(Math.min(1, tt / a[1]));
+    const p = {};
+    KEYS.forEach(k => { p[k] = a[0][k] + (b[0][k] - a[0][k]) * u; });
+    const ax = a[2] || an.ax || null;
+    return side2 ? {p:swapLR(p), ax:swapAn(ax)} : {p, ax};
+  }
+
+  function place(an, s, ax) {
+    let dx = an.x0, dy = an.y0 || 0;
+    if (ax) {
+      const q = ax === 'feet' ? [(s.legL[2][0] + s.legR[2][0]) / 2, 0]
+        : ax === 'aL' ? s.legL[2] : ax === 'aR' ? s.legR[2] : [0, 0];
+      dx = an.x0 - q[0];
+    }
+    if (an.ay === 'lowest') {
+      let my = s.hd[1] + LEN.hr;
+      [s.pel, s.nk, s.cmid].concat(s.armL, s.armR, s.legL, s.legR).forEach(q => { if (q[1] > my) my = q[1]; });
+      dy = GROUND - 3.5 - my;
+    }
+    return [dx, dy];
+  }
+
+  // Furniture drawn behind the figure, measured once from the first frame.
+  function makeProp(an) {
+    const s0 = sample(an, 0, false), s = solve(s0.p, an.view), d = place(an, s, s0.ax);
+    const W = q => [q[0] + d[0], q[1] + d[1]];
+    const G = GROUND - 1, f = n => n.toFixed(1);
+    if (an.prop === 'door') { const x = W(s.armR[2])[0] - 3; return `M${f(x)} 30V${G}`; }
+    if (an.prop === 'wall') { const x = Math.min(W(s.pel)[0] - 7, W(s.hd)[0] - LEN.hr - 3); return `M${f(x)} 24V${G}`; }
+    return '';
+  }
+
+  const F = {
+    svg:$('#fig'), armL:$('#f-armL'), armR:$('#f-armR'), legL:$('#f-legL'), legR:$('#f-legR'),
+    torso:$('#f-torso'), head:$('#f-head'), eye:$('#f-eye'), prop:$('#f-prop'), pacer:$('#f-pacer')
+  };
+  const showEl = (el, on) => { if (on) el.removeAttribute('hidden'); else el.setAttribute('hidden', ''); };
+  function drawFig(key, t, side2, pacerScale) {
+    const an = A[key];
+    const smp = sample(an, t, side2);
+    const s = solve(smp.p, an.view);
+    const d = place(an, s, smp.ax);
+    const P = q => (q[0] + d[0]).toFixed(1) + ',' + (q[1] + d[1]).toFixed(1);
+    if (F.svg.dataset.view !== an.view) F.svg.dataset.view = an.view;
+    F.armL.setAttribute('points', s.armL.map(P).join(' '));
+    F.armR.setAttribute('points', s.armR.map(P).join(' '));
+    F.legL.setAttribute('points', s.legL.map(P).join(' '));
+    F.legR.setAttribute('points', s.legR.map(P).join(' '));
+    F.torso.setAttribute('d', `M${P(s.pel)} Q${P(s.ctrl)} ${P(s.nk)}`);
+    F.head.setAttribute('cx', (s.hd[0] + d[0]).toFixed(1));
+    F.head.setAttribute('cy', (s.hd[1] + d[1]).toFixed(1));
+    const ev = dir(s.face - 90, 5), up = dir(s.face, 2.5);
+    F.eye.setAttribute('cx', (s.hd[0] + d[0] + ev[0] + up[0]).toFixed(1));
+    F.eye.setAttribute('cy', (s.hd[1] + d[1] + ev[1] + up[1]).toFixed(1));
+    if (an.prop) {
+      if (an._prop == null) an._prop = makeProp(an);
+      F.prop.setAttribute('d', an._prop);
+    }
+    showEl(F.prop, !!an.prop);
+    showEl(F.pacer, pacerScale != null);
+    if (pacerScale != null) {
+      F.pacer.setAttribute('cx', (s.cmid[0] + d[0]).toFixed(1));
+      F.pacer.setAttribute('cy', (s.cmid[1] + d[1] - 40).toFixed(1));
+      F.pacer.setAttribute('r', (8 + 22 * (pacerScale - .5) / .5).toFixed(1));
+    }
+  }
+
+  /* ================= Exercises ================= */
+  const EX = {
+    catcow:{name:'Mushuk-sigir', reps:8, cue:'To‘rt oyoqda: nafas olib belni pastga bukasiz, boshni ko‘tarasiz. Nafas chiqarib orqani mushukdek tepaga ko‘tarasiz.', err:'Shoshilsangiz — xato. Har harakat bitta nafas bilan.'},
+    tspine:{name:'Ko‘krak burish', reps:16, sw:true, side:'tomonga', cue:'To‘rt oyoqda, bir qo‘l ensada. Tirsakni shiftga qarab oching, ko‘z tirsakka ergashsin. Keyin ikkinchi qo‘l.', err:'Tosni ham qo‘shib bursangiz — xato. Faqat ko‘krak buriladi.'},
+    jog:{name:'Tizza ko‘tarish', sub:'Sekin, ovozsiz', reps:20, meta:'har oyoqqa 10', cue:'Tizzani sekin bel balandligigacha ko‘taring, 1 soniya ushlab turing, oyoqni ohista qo‘ying. Muvozanatni saqlang.', err:'Oyoqni yerga urib qo‘ysangiz yoki tana chayqalsa — xato.'},
+
+    split:{name:'1,5 split squat', sub:'Pastga, yarim tepaga, yana pastga, keyin to‘liq tepaga = 1 marta', reps:16, sw:true, side:'oyoqqa', cue:'Bir oyoq oldinda, ikkinchisi orqada oyoq uchida. Sekin pastga tushing, orqa tizza polga yaqinlashsin. Yarim ko‘tarilib, yana pastga tushing, keyin oldingi tovon bilan itarib to‘liq ko‘tariling. Oyoq orasida dam yo‘q, shuning uchun juda yondiradi.', err:'Oldingi tizza ichkariga tushsa, oldingi tovon ko‘tarilsa yoki orqa tizzani polga urib qo‘ysangiz — xato.', easy:'Yarim takrorsiz, oddiy sekin split squat qiling.'},
+    pushup:{name:'Sekin otjimaniya', sub:'3 soniya pastga', reps:8, cue:'3 soniyada sekin pastga tushing, pastda 1 soniya to‘xtang, keyin kuch bilan ko‘tariling. Tana boshdan tovongacha to‘g‘ri chiziq.', err:'Tez tushib ketsangiz yoki bel pastga osilsa — xato.', easy:'Tizzada bajaring, temp xuddi shunday sekin.'},
+    wallsit:{name:'Devorga o‘tirish', hold:60, cue:'Orqani devorga tirang, sonlar polga parallel, tizzalar 90°. Qo‘llar ko‘krakda. Oyoqlar yonsa ham turing.', err:'Qo‘l bilan sonlarga tiransangiz yoki tizzalar to‘piqdan oldinga chiqib ketsa — xato.', easy:'Biroz balandroq o‘tiring yoki 30 soniyadan boshlang.'},
+    pike:{name:'Pike otjimaniya', sub:'Yelka uchun', reps:8, cue:'Teskari V holati: dumba tepada, qo‘llar va oyoqlar polda. Tirsaklarni bukib, boshni qo‘llar oldidagi polga sekin tushiring, keyin itarib qayting.', err:'Tirsaklarni yonga keng yoysangiz yoki dumba pastga tushib ketsa — xato.', easy:'Chuqur tushmang, boshni yarim yo‘lgacha tushiring.'},
+    bear:{name:'Ayiq holati', sub:'Yelkaga tegish', reps:20, meta:'har qo‘lga 10', cue:'To‘rt oyoqda, tizzalar poldan 3 sm ko‘tarilgan, orqa tekis. Bir qo‘l bilan qarama-qarshi yelkaga teging, navbat bilan. Tizzalar polga tegmasin.', err:'Tos chayqalsa yoki tizza polga tushsa — xato.', easy:'Tizzalarni polga qo‘yib bajaring.'},
+
+    slbridge:{name:'Bir oyoqli ko‘prik', sub:'Dumba uchun', reps:20, sw:true, side:'oyoqqa', cue:'Chalqancha, bir oyoq polda, ikkinchisi to‘g‘ri ko‘tarilgan. Poldagi tovon bilan tosni ko‘taring, tepada 2 soniya dumbani qising, sekin tushing.', err:'Tos bir tomonga qiyshaysa yoki belni egib ko‘tarsangiz — xato.', easy:'Ikkala oyoq polda bajaring.'},
+    deadbug:{name:'Dead bug', sub:'Har harakat 3 soniya', reps:16, meta:'har tomonga 8', cue:'Chalqancha: qo‘llar shiftga, tizzalar 90°. Belni polga bosing. Qarama-qarshi qo‘l va oyoqni 3 soniyada sekin cho‘zib, qaytaring.', err:'Bel yerdan ajralsa yoki tez bajarsangiz — xato.'},
+    plank:{name:'Kuchli planka', sub:'Maksimal qisish', hold:30, cue:'Tirsaklarda planka. Dumba, qorin va sonlarni butun kuch bilan qising, tirsaklarni oyoq tomonga tortayotgandek bosing. Qisqa, lekin juda og‘ir.', err:'Bo‘shashib oddiy planka qilib tursangiz yoki dumba ko‘tarilsa — xato.'},
+
+    kneel:{name:'Tizzada son cho‘zilishi', sub:'Orqa oyoqni qo‘l bilan ushlab', hold:120, sw:true, side:'oyoqqa', cue:'Bir tizzada turing (ostiga yostiq), oldingi oyoq oldinda. Orqadagi oyoq panjasini shu tomondagi qo‘l bilan ushlab, tovonni dumbaga torting. Tanani tik tuting va dumbani qising.', err:'Belni egib, tanani oldinga engashtirsangiz — xato. Tana tik, dumba qisilgan.', easy:'Oyoqni ushlay olmasangiz, qo‘lni tepaga cho‘zib, dumbani qisib turing.'},
+    chest:{name:'Ko‘krak cho‘zish', hold:45, cue:'Qo‘llarni eshik ramkasiga qo‘yib, bir qadam oldinga bosing. Ko‘krak ochiladi.', err:'Yelkani quloqqa ko‘tarsangiz — xato.'},
+    hams:{name:'Oyoq orqa qismi', hold:45, cue:'O‘tirib oyoqlarni to‘g‘ri cho‘zing, barmoqlarga qarab engashing.', err:'Orqani bukchaytirsangiz — xato. Ko‘krak bilan oldinga intiling.'},
+    breath:{name:'Ikki marta xo‘rsinish', sub:'Chalqancha yoting, ko‘zni yuming', reps:15, unit:'nafas', cue:'', err:''}
+  };
+  Object.entries(EX).forEach(([k, e]) => {
+    e.key = k;
+    e.est = e.reps ? e.reps * A[k].cyc / A[k].per / 1000 : e.hold;
+  });
+  const amount = e => {
+    const n = e.reps ? (e.sw ? e.reps / 2 : e.reps) : (e.sw ? e.hold / 2 : e.hold);
+    const u = e.reps ? (e.unit || 'marta') : 'soniya';
+    return e.sw ? `har ${e.side} ${n} ${u}` : `${n} ${u}`;
+  };
+  const fullName = e => e.name;
+
+  const SEC = {
+    warm:{key:'warm', name:'Qizish', label:'Qizish', color:'--sun', list:['catcow','tspine','jog']},
+    main:{key:'main', name:'Stressni chiqarish', label:'Ish', color:'--work', list:['split','pushup','wallsit','pike','bear']},
+    body:{key:'body', name:'Tana nazorati', label:'Tana nazorati', color:'--calm', list:['slbridge','deadbug','plank']},
+    stretch:{key:'stretch', name:'Cho‘zilish va nafas', label:'Cho‘zilish', color:'--rest', list:['kneel','chest','hams','breath']}
+  };
+  const SESS = {A:['warm','main','body','stretch'], B:['warm','body','stretch'], C:['stretch']};
+
+  const S = Object.assign({rounds:2}, store.get('sr.settings', {}));
+  if (![2,3,4].includes(S.rounds)) S.rounds = 2;
+  const saveS = () => store.set('sr.settings', {rounds:S.rounds});
+
+  function build(key) {
+    const seq = [];
+    const R = S.rounds;
+    SESS[key].forEach((sk, si) => {
+      const sec = SEC[sk], num = si + 1;
+      if (sk === 'main') {
+        for (let r = 1; r <= R; r++) {
+          sec.list.forEach((k, j) => seq.push({ex:k, sec, num, round:r, rounds:R, color:'--work', last:j === sec.list.length - 1}));
+        }
+      } else {
+        sec.list.forEach(k => seq.push({ex:k, sec, num, color: k === 'breath' ? '--rest' : sec.color}));
+      }
+    });
+    return seq;
+  }
+  // Rough time estimate for the home screen only: exercise time + rest the user takes between moves.
+  function estimate(seq, secKey) {
+    return seq.filter(s => !secKey || s.sec.key === secKey).reduce((a, s) => {
+      let extra = 10;
+      if (s.sec.key === 'main') extra = s.last ? (s.round < s.rounds ? 60 : 10) : 20;
+      return a + EX[s.ex].est + extra;
+    }, 0);
+  }
+
+  const ymd = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const mins = sec => Math.max(1, Math.round(sec / 60));
+
+  /* ================= Wake lock ================= */
+  let wl = null;
+  async function lockScreen() {
+    try {
+      if ('wakeLock' in navigator && document.visibilityState === 'visible' && !wl) {
+        wl = await navigator.wakeLock.request('screen');
+        if (wl && wl.addEventListener) wl.addEventListener('release', () => { wl = null; });
+      }
+    } catch (e) { wl = null; }
+  }
+  function unlockScreen() { try { if (wl) wl.release(); } catch (e) {} wl = null; }
+
+  /* ================= Home ================= */
+  let pick = PLAN[new Date().getDay()];
+  let view = 'home';
+
+  function weekDays() {
+    const d = new Date(); d.setHours(12,0,0,0);
+    const mon = new Date(d); mon.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    const done = store.get('sr.done', []);
+    const out = [];
+    for (let i = 0; i < 7; i++) {
+      const x = new Date(mon); x.setDate(mon.getDate() + i);
+      out.push({day:x.getDay(), today: ymd(x) === ymd(d), done: done.includes(ymd(x))});
+    }
+    return out;
+  }
+  const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  function renderDays(el) {
+    const w = weekDays();
+    el.innerHTML = w.map(x => `<li class="${x.today ? 'is-today' : ''} ${x.done ? 'is-done' : ''}"><span class="d">${DSHORT[x.day]}</span><span class="m">${SSHORT[PLAN[x.day]]}</span><span class="c">${x.done ? CHECK : ''}</span></li>`).join('');
+    return w.filter(x => x.done).length;
+  }
+
+  function renderHome() {
+    const d = new Date();
+    $('#today-date').textContent = `${DAYS[d.getDay()]} · ${d.getDate()}-${MONTHS[d.getMonth()]}`;
+    const plan = PLAN[d.getDay()];
+    $('#today-tag').textContent = d.getDay() === 6 ? 'Reja: to‘liq yoki 30–40 daq tez yurish' : `Reja: ${SNAME[plan].toLowerCase()}`;
+    document.querySelectorAll('[data-today]').forEach(el => { el.hidden = el.dataset.today !== plan; });
+    ['A','B','C'].forEach(k => { $(`[data-min="${k}"]`).textContent = `~${mins(estimate(build(k)))} daqiqa`; });
+    $(`#s-${pick}`).checked = true;
+    $(`#r-${S.rounds}`).checked = true;
+    $('#rounds-row').classList.toggle('off', pick !== 'A');
+
+    const seq = build(pick);
+    const parts = SESS[pick].map(sk => ({name:SEC[sk].name, color:SEC[sk].color, sec:estimate(seq, sk), n:seq.filter(s => s.sec.key === sk).length}));
+    $('#timeline').innerHTML = parts.map(p => `<span style="flex:${p.sec} 1 0;background:var(${p.color})"></span>`).join('');
+    $('#legend').innerHTML = parts.map(p => `<li><i style="background:var(${p.color})"></i>${p.name} <em>${p.n} mashq</em></li>`).join('');
+    $('#start-min').textContent = `${seq.length} ta mashq`;
+    const h = d.getHours();
+    $('#late-hint').hidden = !(h >= 22 || h < 4) || pick === 'C';
+    const n = renderDays($('#days'));
+    $('#week-count').textContent = `${n} / 7 kun`;
+  }
+
+  document.querySelectorAll('input[name="session"]').forEach(el => el.addEventListener('change', () => { pick = el.value; renderHome(); }));
+  document.querySelectorAll('input[name="rounds"]').forEach(el => el.addEventListener('change', () => { S.rounds = +el.value; saveS(); renderHome(); }));
+
+  /* ================= Player ================= */
+  const T = {seq:[], idx:0, session:'A', stepStart:0, startedAt:0, cueText:''};
+
+  function show(v) {
+    view = v;
+    $('#home').hidden = v !== 'home';
+    $('#player').hidden = v !== 'player';
+    $('#done').hidden = v !== 'done';
+    window.scrollTo(0, 0);
+  }
+  function setText(sel, txt) { const el = $(sel); el.hidden = !txt; el.textContent = txt || ''; }
+  function setLine(sel, txt) { const el = $(sel); el.hidden = !txt; el.querySelector('span').textContent = txt || ''; }
+
+  function nextLine(i) {
+    const seq = T.seq, st = seq[i], nx = seq[i + 1];
+    if (!nx) return 'Oxirgi mashq. Shoshilmang.';
+    const e = EX[nx.ex];
+    const what = `<b>${fullName(e)}</b> · ${amount(e)}`;
+    if (st.sec.key === 'main' && nx.sec.key === 'main') {
+      if (st.last) return `${st.round}-aylana tugaydi. 1 daqiqa dam oling, keyin ${nx.round}-aylana: ${what}`;
+      return `Avval 20 soniya dam oling. Keyingisi: ${what}`;
+    }
+    if (nx.sec !== st.sec) return `Keyingi qism: ${nx.sec.name}. Birinchi: ${what}`;
+    return `Keyingisi: ${what}`;
+  }
+
+  function renderStep() {
+    const i = T.idx, st = T.seq[i], E = EX[st.ex];
+    T.stepStart = Date.now();
+    $('#player').style.setProperty('--phase', `var(${st.color})`);
+    $('#p-phase').textContent = st.ex === 'breath' ? 'Nafas' : st.sec.label;
+    $('#p-count').textContent = `Mashq ${i + 1} / ${T.seq.length}`;
+    $('#p-bar').style.width = ((i + 1) / T.seq.length * 100).toFixed(2) + '%';
+    $('#p-section').textContent = `${st.num}-qism · ${st.sec.name}` + (st.sec.key === 'main' ? ` · ${st.round}/${st.rounds}-aylana` : '');
+
+    let big, of;
+    if (E.reps) { big = E.sw ? E.reps / 2 : E.reps; of = E.sw ? `marta · har ${E.side}` : (E.unit || 'marta'); }
+    else { big = E.sw ? E.hold / 2 : E.hold; of = E.sw ? `soniya · har ${E.side}` : 'soniya ushlab turing'; }
+    $('#p-big').textContent = big;
+    $('#p-of').textContent = of;
+    $('#p-meta').textContent = E.meta || '';
+
+    $('#p-title').textContent = E.name;
+    setText('#p-sub', E.sub || '');
+    T.cueText = E.cue;
+    $('#p-cue').textContent = E.cue;
+    setLine('#p-err', E.err);
+    setLine('#p-easy', E.easy || '');
+    $('#p-next').innerHTML = nextLine(i);
+    $('#p-prev').disabled = i === 0;
+    $('#p-go-label').textContent = i === T.seq.length - 1 ? 'Tugatish' : 'Bajardim';
+  }
+
+  function frame() {
+    const st = T.seq[T.idx]; if (!st) return;
+    const an = A[st.ex], E = EX[st.ex];
+    const t = Date.now() - T.stepStart;
+    // For two-sided moves, the figure alternates sides every two cycles.
+    const side2 = !!E.sw && Math.floor(t / (an.cyc * 2)) % 2 === 1;
+    let pacer = null;
+    if (st.ex === 'breath') {
+      const c = (t / 1000) % 10;
+      let s, txt;
+      if (c < 2) { s = .5 + .35 * ease(c / 2); txt = 'Burun bilan chuqur nafas oling'; }
+      else if (c < 3) { s = .85 + .15 * ease(c - 2); txt = 'Ustiga yana bitta qisqa nafas'; }
+      else if (c < 9) { s = 1 - .5 * ease((c - 3) / 6); txt = 'Og‘iz bilan sekin, uzoq chiqaring'; }
+      else { s = .5; txt = 'Bo‘shashing'; }
+      pacer = s;
+      if (txt !== T.cueText) { T.cueText = txt; $('#p-cue').textContent = txt; }
+    }
+    drawFig(st.ex, t, side2, pacer);
+  }
+
+  function loop() {
+    if (view !== 'player') return;
+    frame();
+    requestAnimationFrame(loop);
+  }
+
+  function begin(session, idx, startedAt) {
+    T.session = session; T.seq = build(session);
+    T.idx = Math.max(0, Math.min(T.seq.length - 1, idx || 0));
+    T.startedAt = startedAt || Date.now();
+    show('player'); renderStep(); lockScreen();
+    requestAnimationFrame(loop);
+  }
+  function goNext() {
+    if (T.idx >= T.seq.length - 1) return finish();
+    T.idx++; renderStep(); window.scrollTo(0, 0);
+  }
+  function goPrev() {
+    if (T.idx === 0) return;
+    T.idx--; renderStep(); window.scrollTo(0, 0);
+  }
+  function openSheet() { $('#p-sheet').hidden = false; $('#sheet-stay').focus(); }
+  function closeSheet() { $('#p-sheet').hidden = true; }
+  function stopSession() {
+    T.seq = []; unlockScreen(); closeSheet();
+    show('home'); renderHome();
+  }
+  function finish() {
+    unlockScreen();
+    const key = ymd(new Date());
+    const done = store.get('sr.done', []);
+    if (!done.includes(key)) { done.push(key); store.set('sr.done', done.slice(-90)); }
+    const count = T.seq.length;
+    const took = mins((Date.now() - T.startedAt) / 1000);
+    show('done');
+    const n = renderDays($('#days-done'));
+    $('#done-text').textContent = `${count} ta mashq, ${took} daqiqa. Bu hafta ${n}-kun.`;
+    T.seq = [];
+  }
+
+  $('#start-btn').addEventListener('click', () => begin(pick, 0));
+  $('#p-go').addEventListener('click', goNext);
+  $('#p-prev').addEventListener('click', goPrev);
+  $('#p-close').addEventListener('click', openSheet);
+  $('#sheet-stay').addEventListener('click', closeSheet);
+  $('#sheet-stop').addEventListener('click', stopSession);
+  $('#p-sheet').addEventListener('click', e => { if (e.target.id === 'p-sheet') closeSheet(); });
+  $('#done-home').addEventListener('click', () => { show('home'); renderHome(); });
+
+  document.addEventListener('keydown', e => {
+    if (view !== 'player') return;
+    if (!$('#p-sheet').hidden) { if (e.key === 'Escape') closeSheet(); return; }
+    if (e.target && e.target.closest && e.target.closest('button') && (e.key === ' ' || e.key === 'Enter')) return;
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); goNext(); }
+    else if (e.key === 'ArrowLeft') goPrev();
+    else if (e.key === 'Escape') openSheet();
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && view === 'player') lockScreen();
+  });
+
+  /* ================= Boot ================= */
+  function snapshot() {
+    return {view, pick, run: view === 'player' && T.seq.length ? {session:T.session, idx:T.idx, startedAt:T.startedAt} : null};
+  }
+  try { window.claude?.hot?.snapshot?.(snapshot); } catch (e) {}
+
+  function start(data) {
+    data = data || {};
+    if (data.pick && SESS[data.pick]) pick = data.pick;
+    renderHome();
+    if (data.view === 'player' && data.run && SESS[data.run.session]) begin(data.run.session, data.run.idx, data.run.startedAt);
+  }
+  window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+})();
+</script>
+
+</body>
+</html>
